@@ -1,0 +1,147 @@
+# CodeBreak — exemple de configuration
+# Copie ce fichier vers ~/.config/codebreak/config.yaml (ou `codebreak config init`).
+# Un fichier .codebreak.yaml à la racine d'un projet surcharge ces valeurs pour ce projet.
+# Toutes les clés sont optionnelles : ce sont ici les valeurs par défaut.
+
+# Profil de routage :
+#   eco      = gratuit d'abord, Claude seulement pour le difficile
+#   balanced = gratuit pour le petit, Sonnet pour le sérieux, Opus pour le critique
+#   quality  = Claude dès que la tâche n'est pas triviale
+# (Shift+Tab dans l'interface change de profil pour la session.)
+profile: balanced
+
+# Le LLM qui joue le rôle de routeur (il ne classe que les demandes ambiguës).
+router:
+  provider: auto          # auto | ollama | opencode | claude | rules
+  model: auto             # auto, ou "ministral-3:3b", "opencode/big-pickle", "haiku"
+  mode: ambiguous         # ambiguous = LLM seulement si les règles hésitent · always · never
+  confidence_threshold: 0.7
+  timeout_ms: 15000
+  cache_ttl_hours: 168    # une même demande n'est jamais classée deux fois
+
+# Table complexité → niveau, par profil (0 local · 1 gratuit cloud · 2 milieu · 3 Sonnet · 4 Opus).
+# Ne mets que ce que tu veux changer.
+profiles:
+  balanced:
+    "3": 3
+
+policy:
+  category_floors:        # niveau minimal par catégorie
+    auth_security: 3
+    legal: 3
+  security_min_level: 3        # une tâche sensible ne va jamais sur un modèle gratuit
+  security_preferred_level: 4  # sécurité + tâche difficile → Opus (si le quota le permet)
+  mcp_min_level: 2             # Figma & co. : Claude uniquement
+  large_context_min_level: 2
+  low_confidence: 0.5          # confiance sous ce seuil → +1 niveau
+
+# Ménage ton quota Claude (utilisation 0..1, lue en direct depuis Claude Code).
+quota:
+  claude:
+    soft: 0.75   # tendu    : Opus réservé au critique, Sonnet évité pour le moyen
+    hard: 0.90   # critique : Opus interdit, Sonnet réservé à ce qui l'exige
+    stop: 0.98   # coupé    : Claude désactivé jusqu'à la réinitialisation
+    probe_ttl_min: 10
+
+# Escalade : si la tentative échoue (erreur, tests KO, aucun fichier modifié), on passe au palier supérieur.
+escalation:
+  enabled: true
+  max_attempts: 3
+  ladder: [0, 1, 3, 4]
+
+# Fichier de contexte partagé entre outils (un .md par projet, hors du dépôt) : quand le routeur change
+# d'IA en cours de tâche, la nouvelle cible reçoit une référence courte vers ce fichier au lieu de tout
+# l'historique en clair — elle n'y lit que ce dont elle a besoin, sans refaire ce qu'une autre a déjà fait.
+context:
+  enabled: true
+  max_entries: 12   # tours conservés (les plus anciens sont purgés)
+
+# Vérification par les signaux réels après chaque tentative qui modifie des fichiers.
+verify:
+  mode: auto        # auto = typecheck/lint/test détectés dans package.json · off
+  commands: []      # ou tes propres commandes : ["npm run check", "npm test"]
+  timeout_s: 180
+
+# Activer/désactiver les outils IA : `enabled: false` = jamais appelé (ni exécution, ni routeur, ni @alias).
+# Réglable sans éditer ce fichier : `/tools` (liste à bascule) ou `codebreak tools on|off <outil…>`.
+claude:
+  enabled: true
+  permission_mode: acceptEdits   # acceptEdits = éditions de fichiers OK ; bypassPermissions = tout autoriser
+  allowed_tools: [Bash, WebFetch, WebSearch]   # outils pré-autorisés (sinon refusés en mode non interactif) ; ex. ["Bash(git *)", "Bash(npm *)"] pour restreindre
+  extra_args: []
+
+opencode:
+  enabled: true
+  preferred: [nemotron-3-ultra-free, big-pickle, mimo-v2.5-free]   # ordre de préférence ; `/model opencode <id>` met ton choix en premier (ex. opencode/muse-spark-1.3-contributor-free)
+  extra_models: []                                                  # ex. ["anthropic/claude-sonnet-4-5"] si configuré dans OpenCode (routable + proposé dans /model)
+  auto_approve: true    # autorise les outils sans demander (sinon refusés en mode non interactif)
+  thinking: true        # affiche la réflexion intermédiaire du modèle (opencode run --thinking, en grisé)
+
+ollama:
+  enabled: true
+  base_url: http://localhost:11434
+  autostart: true          # lance `ollama serve` si besoin
+  keep_alive: 10m
+  agent_num_ctx: 32768     # contexte du mode agent (variante créée à la volée, sans copie de poids)
+  chat_num_ctx: 8192
+  memory_ratio: 0.5        # part de la RAM utilisable par un modèle local
+  preferred_model: ''      # nom exact d'un modèle installé pour le préférer aux autres (sinon : le plus gros qui tient) ; réglable via /model ollama
+
+copilot:
+  enabled: true
+  mode: agent              # ask | edit | agent
+  auto_route: true         # false = Copilot seulement via @copilot
+  open_folder: true        # ouvre le projet dans VS Code avant d'envoyer le prompt
+  mcp: false               # passe à true si Figma/MCP est configuré dans VS Code
+
+vibe:
+  enabled: true
+  agent: auto-approve      # ask | plan | accept-edits | auto-approve | smart-approve (mode -p)
+  trust: true              # trust temporaire du dossier courant
+  extra_args: []
+
+gemini:
+  enabled: true
+  model: auto              # auto, ou "gemini-3.5-flash"… ; réglable via /model gemini
+  approval_mode: yolo      # default | auto_edit | yolo | plan
+  extra_args: []
+
+aider:
+  enabled: true
+  model: ''                # vide = modèle par défaut d'aider ; ex. "sonnet", "gpt-4o" ; réglable via /model aider
+  auto_commits: false
+  extra_args: []
+
+lms:                       # LM Studio (serveur OpenAI-compatible)
+  enabled: true
+  base_url: http://localhost:1234
+  autostart: true          # démarre `lms server start` si besoin
+  temperature: 0.2
+  max_tokens: 0            # 0 = pas de limite
+  preferred_model: ''      # id d'un modèle chargeable à préférer ; réglable via /model lms
+
+llamacpp:                  # llama.cpp : llama-server (API) + llama-cli (GGUF)
+  enabled: true
+  base_url: http://localhost:8080
+  models_dirs: ['~/models', '~/.cache/huggingface/hub', '~/.lmstudio/models']
+  num_ctx: 8192
+  n_predict: 2048
+  temperature: 0.2
+  extra_args: []
+  preferred_model: ''      # id d'un .gguf trouvé à préférer ; réglable via /model llama
+
+# Une demande contenant un secret n'est jamais envoyée au cloud.
+privacy:
+  action: local            # local = traiter en local · block = refuser
+  never_cloud_patterns:
+    - '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+    - '\bsk-[A-Za-z0-9_-]{20,}'
+
+logging:
+  content: false           # false = le journal ne contient que des métadonnées, jamais le texte des prompts
+
+# Désactiver ou requalifier une cible précise :
+targets:
+  # "claude:opus": { enabled: false }
+  # "opencode:opencode/big-pickle": { level: 2 }
+  {}
