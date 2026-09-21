@@ -1,0 +1,53 @@
+{
+  "name": "codebreak",
+  "version": "0.1.0",
+  "description": "LLM router CLI: automatically picks between Claude Code, OpenCode, Ollama, Copilot, Gemini, Vibe, aider, LM Studio and llama.cpp based on the task, its complexity and the remaining quota. Also discovers and installs local models suited to your machine (EN/FR).",
+  "type": "module",
+  "bin": {
+    "codebreak": "dist/cli.js",
+    "cb": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.fr.md",
+    "SPEC.md",
+    "SPEC.fr.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.tsx",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "ink": "^7.1.1",
+    "react": "^19.3.0",
+    "yaml": "^2.8.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "ink-testing-library": "^4.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "llm",
+    "router",
+    "cli",
+    "claude-code",
+    "ollama",
+    "opencode",
+    "mlx",
+    "local-ai"
+  ]
+}
