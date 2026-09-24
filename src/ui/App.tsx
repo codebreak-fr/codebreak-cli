@@ -25,6 +25,8 @@ import { ItemView, type Item, type NewItem, type WelcomeProps } from './items.js
 import { Markdown } from './Markdown.js';
 import { ContextPanel } from './ContextPanel.js';
 import { buildContext } from '../memory/context-builder.js';
+import { prepareTask } from '../memory/task.js';
+import { KIND_LABEL } from '../exec/diagnose.js';
 import { AllAiUsagePanel, Environment, HelpPanel, ModelsTable, UsagePanel } from './panels.js';
 import { Picker, type PickerOption } from './Picker.js';
 import { parseMouse } from './mouse.js';
@@ -247,7 +249,7 @@ export function App(props: AppProps) {
 
     setBusy({ label: `${decision.primary!.label}`, startedAt: Date.now() });
     // contexte projet : seulement ce qui se rapporte à la demande (voir /context why)
-    const contextPack = buildContext(cwd, cfgRef.current, prompt);
+    const { taskId, recorder, context: contextPack } = prepareTask(cwd, cfgRef.current, decision, prompt);
     if (contextPack.text) push({ kind: 'info', text: t('Contexte projet : {files} fichier(s), {decisions} décision(s), {failures} échec(s) précédent(s) ({chars} caractères)', contextPack.counts) });
     for await (const ev of runTask({
       prompt,
@@ -258,6 +260,8 @@ export function App(props: AppProps) {
       signal: ac.signal,
       sessions: sessionsRef.current,
       contextText: contextPack.text,
+      recorder,
+      taskId,
       recap: buildRecap(turnsRef.current),
       recapFile: contextReference(cwd, cfgRef.current),
     })) {
@@ -307,6 +311,16 @@ export function App(props: AppProps) {
           break;
         case 'verify_result':
           push({ kind: 'verify', result: ev.result });
+          break;
+        case 'diagnosis':
+          flushLive();
+          push({ kind: 'info', text: t('Diagnostic (tentative {n}) : {kind} — {summary}', { n: ev.attempt, kind: t(KIND_LABEL[ev.diagnosis.kind]), summary: ev.diagnosis.summary }) });
+          break;
+        case 'retry':
+          push({ kind: 'info', text: t('↻ Nouvelle tentative avec {label} — {reason}', { label: ev.target.label, reason: ev.reason }) });
+          break;
+        case 'rollback':
+          push({ kind: 'info', text: t('↩ Tentative {n} annulée : {restored} fichier(s) restauré(s), {removed} supprimé(s), {skipped} laissé(s) (modifiés depuis)', { n: ev.attempt, restored: ev.restored.length, removed: ev.removed.length, skipped: ev.skipped }) });
           break;
         case 'escalate':
           flushLive();

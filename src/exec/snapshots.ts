@@ -38,7 +38,7 @@ const git = (cwd: string, args: string[], extra: NodeJS.ProcessEnv = {}, timeout
 
 const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]+/g, '-').slice(0, 60);
 
-export async function createWorkSnapshot(cwd: string, label: string): Promise<WorkSnapshot | null> {
+export async function createWorkSnapshot(cwd: string, label: string, opts: { exclude?: string[] } = {}): Promise<WorkSnapshot | null> {
   const top = await git(cwd, ['rev-parse', '--show-toplevel']);
   if (top.code !== 0) return null;
   const root = top.stdout.trim();
@@ -48,7 +48,8 @@ export async function createWorkSnapshot(cwd: string, label: string): Promise<Wo
   const dir = mkdtempSync(join(tmpdir(), 'cb-idx-'));
   try {
     const env = { GIT_INDEX_FILE: join(dir, 'index') };
-    const add = await git(root, ['add', '-A', '--', ':/'], env);
+    // la mémoire de CodeBreak (`.codebreak/`) n'est jamais du « travail de l'agent » ni annulable
+    const add = await git(root, ['add', '-A', '--', ':/', ...(opts.exclude ?? []).map((p) => `:(exclude)${p}`)], env);
     if (add.code !== 0) return null;
     const tree = await git(root, ['write-tree'], env);
     if (tree.code !== 0) return null;

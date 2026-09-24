@@ -32,6 +32,11 @@ export function num(n: number, digits = 1): string {
  * En français la clé est rendue telle quelle ; en anglais on cherche `en[clé]` (repli : la clé).
  */
 export function t(key: string, vars?: Record<string, unknown>): string {
-  const text = current === 'en' ? (en[key] ?? key) : key;
+  return translateTo(current, key, vars);
+}
+
+/** Traduit vers une langue précise, indépendamment de la langue courante (ex. fichiers Markdown toujours en anglais). */
+export function translateTo(lang: Lang, key: string, vars?: Record<string, unknown>): string {
+  const text = lang === 'en' ? (en[key] ?? key) : key;
   return vars ? text.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m)) : text;
 }

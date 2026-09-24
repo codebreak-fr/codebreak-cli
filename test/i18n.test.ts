@@ -8,6 +8,8 @@ import { en } from '../src/i18n/en.js';
 import { getLang, num, resolveLang, setLang, t } from '../src/i18n/index.js';
 import { COMMANDS } from '../src/ui/commands.js';
 import { KIND_LABEL } from '../src/ui/ContextPanel.js';
+import { KIND_LABEL as FAILURE_KIND_LABEL } from '../src/exec/diagnose.js';
+import { REASONS } from '../src/exec/strategy.js';
 import { LEVEL_NAMES } from '../src/ui/format.js';
 
 const SRC = join(__dirname, '..', 'src');
@@ -42,6 +44,8 @@ const constantKeys = () => [
   ...CATEGORIES.flatMap((c) => [c.label, c.description]),
   ...LEVEL_NAMES,
   ...Object.values(KIND_LABEL),
+  ...Object.values(FAILURE_KIND_LABEL),
+  ...Object.values(REASONS),
   'Recommandé', 'Alternative', 'Lent', 'Exclu',
   'éco', 'équilibré', 'qualité',
   'mémoire unifiée',

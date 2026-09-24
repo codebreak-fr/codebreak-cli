@@ -55,7 +55,7 @@ describe('aucun français résiduel en anglais', () => {
       { id: 2, kind: 'escalate', from: target, to: target, reason: 'x' },
       { id: 3, kind: 'done', ok: true, target, ms: 1500, tokens: 1200, costUsd: 0.02, verified: true, handoff: false },
       { id: 4, kind: 'done', ok: false, target, ms: 800, tokens: 0, costUsd: 0, handoff: true, message: 'x' },
-      { id: 5, kind: 'verify', result: { ok: false, steps: [{ command: 'npm test', ok: false, output: 'boom', ms: 100 }] } },
+      { id: 5, kind: 'verify', result: { ok: false, steps: [{ command: 'npm test', ok: false, output: 'boom', ms: 100, exitCode: 1, stdout: '', stderr: 'boom', timedOut: false }] } },
       { id: 6, kind: 'info', text: 'ok' },
     ];
     const frames: Record<string, string> = {};

@@ -1,6 +1,8 @@
 import type { Config } from './config/schema.js';
 import type { Detection } from './detect/types.js';
+import { KIND_LABEL } from './exec/diagnose.js';
 import { runTask } from './exec/runner.js';
+import { prepareTask } from './memory/task.js';
 import { route } from './router/index.js';
 import { buildTargets, ALL_BACKENDS, resolveTarget } from './router/targets.js';
 import type { ClaudeUsage, Decision } from './types.js';
@@ -75,8 +77,12 @@ export async function runOneShot(o: OneShotOptions): Promise<number> {
   let tokens = 0;
   let ok = false;
   const chunks: string[] = [];
-  for await (const ev of runTask({ prompt, decision, cwd: o.cwd, cfg: o.cfg, det: o.det, signal: ac.signal })) {
+  const prepared = prepareTask(o.cwd, o.cfg, decision, prompt);
+  for await (const ev of runTask({ prompt, decision, cwd: o.cwd, cfg: o.cfg, det: o.det, signal: ac.signal, contextText: prepared.context.text, recorder: prepared.recorder, taskId: prepared.taskId })) {
     if (ev.type === 'attempt' && ev.n > 1) console.error(t('\n⤴ tentative {n}/{total} : {label}', { n: ev.n, total: ev.total, label: ev.target.label }));
+    else if (ev.type === 'diagnosis' && !o.quiet) console.error(t('Diagnostic (tentative {n}) : {kind} — {summary}', { n: ev.attempt, kind: t(KIND_LABEL[ev.diagnosis.kind]), summary: ev.diagnosis.summary }));
+    else if (ev.type === 'retry') console.error(t('↻ Nouvelle tentative avec {label} — {reason}', { label: ev.target.label, reason: ev.reason }));
+    else if (ev.type === 'rollback' && !o.quiet) console.error(t('↩ Tentative {n} annulée : {restored} fichier(s) restauré(s), {removed} supprimé(s), {skipped} laissé(s) (modifiés depuis)', { n: ev.attempt, restored: ev.restored.length, removed: ev.removed.length, skipped: ev.skipped }));
     else if (ev.type === 'escalate') console.error(t('⤴ escalade {label} → {label2} ({reason})', { label: ev.from.label, label2: ev.to.label, reason: ev.reason }));
     else if (ev.type === 'verify_result') {
       for (const s of ev.result.steps) console.error(`${s.ok ? '✔' : '✘'} ${s.command} (${fmtDuration(s.ms)})`);

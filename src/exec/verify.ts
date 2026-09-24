@@ -7,8 +7,13 @@ import { t } from '../i18n/index.js';
 export interface VerifyStep {
   command: string;
   ok: boolean;
+  /** stdout + stderr fusionnés, tronqués (fin de sortie) */
   output: string;
   ms: number;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
 }
 
 export interface VerifyResult {
@@ -66,6 +71,10 @@ export async function runVerify(cwd: string, commands: string[], cfg: Config, si
       ok,
       output: tail((r.stdout + '\n' + r.stderr).trim() + (r.timedOut ? t('\n[délai dépassé]') : '')),
       ms: Date.now() - started,
+      exitCode: r.code,
+      stdout: tail(r.stdout.trim()),
+      stderr: tail(r.stderr.trim()),
+      timedOut: r.timedOut,
     });
     if (!ok) break;
   }

@@ -23,6 +23,10 @@ export async function snapshot(cwd: string): Promise<GitSnapshot> {
   return { isRepo: true, signature, files };
 }
 
-/** Fichiers présents dans `after` et absents ou modifiés depuis `before` (approximation : liste après). */
+/**
+ * Repli quand les instantanés d'arbre ne sont pas disponibles : fichiers devenus modifiés/non suivis depuis `before`.
+ * Sous-estime (un fichier déjà modifié puis re-modifié n'apparaît pas) mais n'attribue jamais à l'agent le travail
+ * que l'utilisateur avait déjà en cours.
+ */
 export const changedFiles = (before: GitSnapshot, after: GitSnapshot): string[] =>
-  before.signature === after.signature ? [] : after.files;
+  before.signature === after.signature ? [] : after.files.filter((f) => !before.files.includes(f));
