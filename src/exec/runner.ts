@@ -32,6 +32,8 @@ export interface TaskOptions {
    * quelques dizaines de tokens au lieu de réinjecter tout l'historique à chaque changement d'outil.
    */
   recapFile?: string;
+  /** contexte projet sélectionné par le Context Builder (`.codebreak/`) : préfixe borné du prompt de chaque nouvel agent */
+  contextText?: string;
   /** exécuteur de backend (injectable pour les tests) */
   runner?: (req: RunRequest) => AsyncGenerator<RunEvent>;
 }
@@ -72,7 +74,9 @@ export async function* runTask(opts: TaskOptions): AsyncGenerator<TaskEvent> {
     // partagé plutôt que l'historique en clair : ça évite de repayer les mêmes tokens à chaque tour.
     const recapText = target.caps.tools && opts.recapFile ? opts.recapFile : opts.recap;
     const needsRecap = i === 0 && !sessionId && recapText;
-    const effective = needsRecap ? `${recapText}\n\n${prompt}` : prompt;
+    // un agent qui reprend sa session connaît déjà le contexte ; un nouvel agent le reçoit une fois
+    const ctx = opts.contextText && !sessionId ? `${opts.contextText}\n\n` : '';
+    const effective = ctx + (needsRecap ? `${recapText}\n\n${prompt}` : prompt);
 
     const before = await snapshot(cwd);
     const started = Date.now();

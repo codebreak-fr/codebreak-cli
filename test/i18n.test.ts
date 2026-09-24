@@ -7,6 +7,7 @@ import { fmtGB, verdictLabel } from '../src/catalog/present.js';
 import { en } from '../src/i18n/en.js';
 import { getLang, num, resolveLang, setLang, t } from '../src/i18n/index.js';
 import { COMMANDS } from '../src/ui/commands.js';
+import { KIND_LABEL } from '../src/ui/ContextPanel.js';
 import { LEVEL_NAMES } from '../src/ui/format.js';
 
 const SRC = join(__dirname, '..', 'src');
@@ -40,6 +41,7 @@ const constantKeys = () => [
   ...COMMANDS.flatMap((c) => [c.description, c.args].filter((x): x is string => Boolean(x))),
   ...CATEGORIES.flatMap((c) => [c.label, c.description]),
   ...LEVEL_NAMES,
+  ...Object.values(KIND_LABEL),
   'Recommandé', 'Alternative', 'Lent', 'Exclu',
   'éco', 'équilibré', 'qualité',
   'mémoire unifiée',

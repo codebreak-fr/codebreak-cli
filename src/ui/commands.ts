@@ -12,7 +12,7 @@ export const COMMANDS: CommandDef[] = [
   { name: '/models', description: 'Cibles de routage + choix guidé du modèle par défaut (2 étapes)', args: '[<ia> [<modèle>]]' },
   { name: '/discover', description: 'Découvre, installe et supprime des modèles locaux adaptés à cette machine', args: '[catégorie]' },
   { name: '/tools', description: 'Active/désactive les outils IA (décoché = jamais appelé)', args: '[on|off <outil…>|reset]' },
-  { name: '/context', description: 'Fichier de contexte partagé entre outils (évite le double emploi)', args: '[show|clear]' },
+  { name: '/context', description: 'Fichier de contexte partagé entre outils (évite le double emploi)', args: '[show|clear|why [tâche]]' },
   { name: '/router', description: 'Choisit le LLM qui joue le rôle de routeur', args: '[ollama|opencode|claude|rules|auto] [modèle]' },
   { name: '/profile', description: 'Profil de routage : eco · balanced · quality', args: '<eco|balanced|quality>' },
   { name: '/use', description: 'Force une cible pour les prochains prompts (auto pour annuler)', args: '<opus|sonnet|haiku|local|free|copilot|gemini|vibe|aider|lms|llama|auto>' },

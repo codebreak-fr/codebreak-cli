@@ -23,6 +23,8 @@ import { describeToolsChange, parseModelArgs, parseToolsArgs, toolsWrites } from
 import { Footer } from './Footer.js';
 import { ItemView, type Item, type NewItem, type WelcomeProps } from './items.js';
 import { Markdown } from './Markdown.js';
+import { ContextPanel } from './ContextPanel.js';
+import { buildContext } from '../memory/context-builder.js';
 import { AllAiUsagePanel, Environment, HelpPanel, ModelsTable, UsagePanel } from './panels.js';
 import { Picker, type PickerOption } from './Picker.js';
 import { parseMouse } from './mouse.js';
@@ -244,6 +246,9 @@ export function App(props: AppProps) {
     let lastTarget: Target | null = null;
 
     setBusy({ label: `${decision.primary!.label}`, startedAt: Date.now() });
+    // contexte projet : seulement ce qui se rapporte à la demande (voir /context why)
+    const contextPack = buildContext(cwd, cfgRef.current, prompt);
+    if (contextPack.text) push({ kind: 'info', text: t('Contexte projet : {files} fichier(s), {decisions} décision(s), {failures} échec(s) précédent(s) ({chars} caractères)', contextPack.counts) });
     for await (const ev of runTask({
       prompt,
       decision,
@@ -252,6 +257,7 @@ export function App(props: AppProps) {
       det: detRef.current,
       signal: ac.signal,
       sessions: sessionsRef.current,
+      contextText: contextPack.text,
       recap: buildRecap(turnsRef.current),
       recapFile: contextReference(cwd, cfgRef.current),
     })) {
@@ -492,6 +498,11 @@ export function App(props: AppProps) {
 
       case '/context': {
         const sub = arg.trim().toLowerCase();
+        if (sub === 'why' || sub.startsWith('why ')) {
+          const task = arg.trim().slice(3).trim() || lastRef.current?.prompt || '';
+          if (!task) return push({ kind: 'info', text: t('Usage : /context why <tâche> (ou après une demande)') });
+          return node(<ContextPanel pack={buildContext(cwd, c, task)} task={task} />);
+        }
         const path = contextFilePath(cwd);
         if (sub === 'clear') {
           resetContext(cwd);
