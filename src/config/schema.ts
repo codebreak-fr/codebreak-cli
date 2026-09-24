@@ -64,6 +64,30 @@ export const ConfigSchema = z.object({
       max_attempts: z.number().int().min(1).max(6).default(3),
       /** paliers parcourus lors d'une escalade */
       ladder: z.array(level).default([0, 1, 3, 4]),
+      /** nouvelles tentatives avec le MÊME agent après une erreur simple (syntaxe, types, lint) avant d'escalader */
+      same_agent_retries: z.number().int().min(0).max(3).default(1),
+      /** budget de temps d'une tâche (minutes, 0 = illimité) et de coût (USD, 0 = illimité) */
+      max_minutes: z.number().min(0).default(0),
+      max_cost_usd: z.number().min(0).default(0),
+      /** délai maximal d'une tentative d'agent (minutes, 0 = illimité) */
+      attempt_timeout_minutes: z.number().min(0).default(0),
+      /** annule les fichiers modifiés par une tentative ratée avant la suivante : never | on_no_progress | always */
+      rollback: z.enum(['never', 'on_no_progress', 'always']).default('never'),
+    })
+    .prefault({}),
+
+  /** Mémoire Markdown du projet (`.codebreak/`) et sélection du contexte envoyé aux agents. */
+  memory: z
+    .object({
+      enabled: z.boolean().default(true),
+      /** dossier relatif à la racine du projet */
+      dir: z.string().default('.codebreak'),
+      /** crée le dossier (et son .gitignore) au premier lancement */
+      auto_init: z.boolean().default(true),
+      /** taille maximale (caractères) du contexte injecté dans un prompt */
+      max_context_chars: z.number().int().min(500).default(6000),
+      max_failures: z.number().int().min(0).default(3),
+      max_decisions: z.number().int().min(0).default(4),
     })
     .prefault({}),
 
