@@ -47,6 +47,8 @@ export type Next =
 export interface Availability {
   ok: boolean;
   reason?: string;
+  /** utilisable mais à ménager (limite proche) */
+  caution?: string;
 }
 
 export interface StrategyInput {

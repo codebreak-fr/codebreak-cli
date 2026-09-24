@@ -10,6 +10,7 @@ import { COMMANDS } from '../src/ui/commands.js';
 import { KIND_LABEL } from '../src/ui/ContextPanel.js';
 import { KIND_LABEL as FAILURE_KIND_LABEL } from '../src/exec/diagnose.js';
 import { REASONS } from '../src/exec/strategy.js';
+import { CONFIDENCE_LABEL, SOURCE_LABEL, STATUS_LABEL } from '../src/ui/LimitsPanel.js';
 import { LEVEL_NAMES } from '../src/ui/format.js';
 
 const SRC = join(__dirname, '..', 'src');
@@ -46,6 +47,9 @@ const constantKeys = () => [
   ...Object.values(KIND_LABEL),
   ...Object.values(FAILURE_KIND_LABEL),
   ...Object.values(REASONS),
+  ...Object.values(STATUS_LABEL),
+  ...Object.values(CONFIDENCE_LABEL),
+  ...Object.values(SOURCE_LABEL),
   'Recommandé', 'Alternative', 'Lent', 'Exclu',
   'éco', 'équilibré', 'qualité',
   'mémoire unifiée',

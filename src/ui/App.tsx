@@ -24,6 +24,8 @@ import { Footer } from './Footer.js';
 import { ItemView, type Item, type NewItem, type WelcomeProps } from './items.js';
 import { Markdown } from './Markdown.js';
 import { ContextPanel } from './ContextPanel.js';
+import { LimitsPanel } from './LimitsPanel.js';
+import { collectUsage } from '../usage/monitor.js';
 import { buildContext } from '../memory/context-builder.js';
 import { prepareTask } from '../memory/task.js';
 import { KIND_LABEL } from '../exec/diagnose.js';
@@ -433,6 +435,14 @@ export function App(props: AppProps) {
       }
 
       case '/usage': {
+        // limites d'usage : chaque valeur avec sa source (observé / estimé / inconnu), son horodatage et sa confiance
+        setBusy({ label: t('Lecture des limites d’usage'), startedAt: Date.now() });
+        try {
+          const services = await collectUsage({ cfg: c, det: d, refresh: /^(rafra|refresh)/i.test(arg) });
+          node(<LimitsPanel services={services} detail={/^(d[ée]tail)/i.test(arg)} />);
+        } finally {
+          setBusy(null);
+        }
         const all = readLedger();
         const now = Date.now();
         const startOfDay = new Date().setHours(0, 0, 0, 0);

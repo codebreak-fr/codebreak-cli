@@ -8,7 +8,7 @@ export interface CommandDef {
 export const COMMANDS: CommandDef[] = [
   { name: '/help', description: 'Aide et raccourcis' },
   { name: '/detect', description: 'Redétecte et affiche les LLM installés, le matériel et le quota' },
-  { name: '/usage', description: 'Quota Claude et statistiques de routage', args: '[jour|semaine|tout]' },
+  { name: '/usage', description: 'Limites d’usage de chaque IA (observées, estimées ou inconnues) et statistiques', args: '[détails|rafraîchir]' },
   { name: '/models', description: 'Cibles de routage + choix guidé du modèle par défaut (2 étapes)', args: '[<ia> [<modèle>]]' },
   { name: '/discover', description: 'Découvre, installe et supprime des modèles locaux adaptés à cette machine', args: '[catégorie]' },
   { name: '/tools', description: 'Active/désactive les outils IA (décoché = jamais appelé)', args: '[on|off <outil…>|reset]' },

@@ -9,25 +9,31 @@ interface RateLimitInfo {
   resetsAt?: number;
   rateLimitType?: string;
   utilization?: number;
+  overageStatus?: string;
+  overageDisabledReason?: string;
+  isUsingOverage?: boolean;
   unifiedWindows?: Record<string, { utilization?: number; resetsAt?: number }>;
 }
 
-const win = (w?: { utilization?: number; resetsAt?: number }): QuotaWindow | undefined =>
-  w && typeof w.utilization === 'number' ? { utilization: w.utilization, resetsAt: w.resetsAt } : undefined;
+const win = (w?: { utilization?: number; resetsAt?: number }, now = Date.now()): QuotaWindow | undefined =>
+  w && typeof w.utilization === 'number' ? { utilization: w.utilization, resetsAt: w.resetsAt, observedAt: now } : undefined;
 
 /** Extrait l'utilisation du quota d'un événement `rate_limit_event` de `claude -p --output-format stream-json`. */
-export function parseRateLimitEvent(ev: { rate_limit_info?: RateLimitInfo }): Partial<ClaudeUsage> | null {
+export function parseRateLimitEvent(ev: { rate_limit_info?: RateLimitInfo }, now = Date.now()): Partial<ClaudeUsage> | null {
   const info = ev.rate_limit_info;
   if (!info) return null;
-  const out: Partial<ClaudeUsage> = { status: info.status };
-  out.fiveHour = win(info.unifiedWindows?.five_hour);
-  out.sevenDay = win(info.unifiedWindows?.seven_day);
+  const out: Partial<ClaudeUsage> = { status: info.status, rateLimitType: info.rateLimitType };
+  out.fiveHour = win(info.unifiedWindows?.five_hour, now);
+  out.sevenDay = win(info.unifiedWindows?.seven_day, now);
   // événement ne portant qu'une seule fenêtre
   if (!out.fiveHour && info.rateLimitType === 'five_hour' && typeof info.utilization === 'number') {
-    out.fiveHour = { utilization: info.utilization, resetsAt: info.resetsAt };
+    out.fiveHour = { utilization: info.utilization, resetsAt: info.resetsAt, observedAt: now };
   }
   if (!out.sevenDay && info.rateLimitType === 'seven_day' && typeof info.utilization === 'number') {
-    out.sevenDay = { utilization: info.utilization, resetsAt: info.resetsAt };
+    out.sevenDay = { utilization: info.utilization, resetsAt: info.resetsAt, observedAt: now };
+  }
+  if (info.overageStatus !== undefined || info.isUsingOverage !== undefined) {
+    out.overage = { status: info.overageStatus, using: info.isUsingOverage, reason: info.overageDisabledReason };
   }
   return out;
 }
@@ -41,6 +47,8 @@ export function mergeUsage(prev: ClaudeUsage | null, patch: Partial<ClaudeUsage>
     fiveHour: patch.fiveHour ?? prev?.fiveHour,
     sevenDay: patch.sevenDay ?? prev?.sevenDay,
     status: patch.status ?? prev?.status,
+    rateLimitType: patch.rateLimitType ?? prev?.rateLimitType,
+    overage: patch.overage ?? prev?.overage,
     fetchedAt: now,
   };
 }

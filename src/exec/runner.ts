@@ -8,6 +8,7 @@ import { memoryPaths } from '../memory/layout.js';
 import type { TaskRecorder } from '../memory/recorder.js';
 import type { BackendId, Decision, RunEvent, Target } from '../types.js';
 import { record } from '../usage/ledger.js';
+import { noteAgentError } from '../usage/monitor.js';
 import { redact } from '../util/redact.js';
 import { diagnoseAgentError, diagnoseNoChange, diagnoseVerify, type Diagnosis } from './diagnose.js';
 import { changedFiles, snapshot } from './git.js';
@@ -238,6 +239,9 @@ export async function* runTask(opts: TaskOptions): AsyncGenerator<TaskEvent> {
       log(false, 'skipped');
       diagnosis = diagnoseAgentError(error);
       if (error.kind === 'quota' || error.kind === 'auth' || error.kind === 'unavailable') unavailable.add(target.backend);
+      // limite réellement constatée : gardée pour les décisions suivantes et affichée dans le moniteur d'usage
+      const incident = noteAgentError(target.backend, error);
+      if (incident) rec?.event('usage', `${target.label}: ${incident.kind}${incident.resetAt ? ` (reset ${new Date(incident.resetAt).toISOString()}, estimated)` : ' (reset unknown)'}`, { service: target.backend, kind: incident.kind });
     } else if (isRepo && decision.features.needsEdit && changed.length === 0 && target.level <= 1) {
       // un modèle gratuit qui « annonce » une modification sans toucher un fichier n'a rien fait
       log(false, 'fail');

@@ -32,3 +32,5 @@ export function contextFilePath(cwd: string): string {
 export const catalogCachePath = () => join(stateDir(), 'catalog-cache.json');
 /** Modèles installés via Discovery, avec leur adéquation matérielle : point d'entrée du futur routage. */
 export const modelRegistryPath = () => join(stateDir(), 'model-registry.json');
+export const usageIncidentsPath = () => join(stateDir(), 'usage-incidents.json');
+export const benchCachePath = () => join(stateDir(), 'bench-cache.json');

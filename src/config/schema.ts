@@ -76,6 +76,31 @@ export const ConfigSchema = z.object({
     })
     .prefault({}),
 
+  /** Surveillance des limites d'usage (UsageMonitor). Rien n'est inventé : source, horodatage et confiance accompagnent chaque valeur. */
+  usage: z
+    .object({
+      /** durée (min) pendant laquelle un instantané est réutilisé */
+      ttl_minutes: z.number().positive().default(5),
+      /**
+       * Sondes d'en-têtes de limite avec TA clé d'API (une requête d'1 token). Désactivées par défaut :
+       * elles consomment un peu de quota. Ne lisent jamais les identifiants d'un autre outil.
+       */
+      api_probes: z
+        .object({
+          anthropic: z.boolean().default(false),
+          openai: z.boolean().default(false),
+        })
+        .prefault({}),
+      /** modèle utilisé par les sondes (vide = sonde impossible pour ce fournisseur) */
+      probe_models: z
+        .object({
+          anthropic: z.string().default('claude-haiku-4-5-20251001'),
+          openai: z.string().default(''),
+        })
+        .prefault({}),
+    })
+    .prefault({}),
+
   /** Mémoire Markdown du projet (`.codebreak/`) et sélection du contexte envoyé aux agents. */
   memory: z
     .object({

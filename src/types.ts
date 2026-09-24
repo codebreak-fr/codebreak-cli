@@ -71,12 +71,18 @@ export interface QuotaWindow {
   utilization: number;
   /** epoch secondes */
   resetsAt?: number;
+  /** epoch ms de l'observation de CETTE fenêtre (un événement ne porte pas toujours les deux) */
+  observedAt?: number;
 }
 
 export interface ClaudeUsage {
   fiveHour?: QuotaWindow;
   sevenDay?: QuotaWindow;
   status?: string;
+  /** fenêtre « représentative » du statut (five_hour | seven_day) */
+  rateLimitType?: string;
+  /** dépassement de quota (crédits supplémentaires) */
+  overage?: { status?: string; using?: boolean; reason?: string };
   /** epoch ms */
   fetchedAt: number;
 }

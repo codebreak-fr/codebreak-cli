@@ -12,6 +12,8 @@ import { CATALOG_ACTIONS, catalogCommand } from './commands/catalog.js';
 import { describeToolsChange, parseModelArgs, parseToolsArgs, toolsWrites } from './commands/args.js';
 import { readLedger, summarize } from './usage/ledger.js';
 import { App } from './ui/App.js';
+import { LimitsPanel } from './ui/LimitsPanel.js';
+import { collectUsage } from './usage/monitor.js';
 import { AllAiUsagePanel, Environment, ModelsTable, UsagePanel } from './ui/panels.js';
 import { readJson, writeJson } from './util/store.js';
 import pkg from '../package.json' with { type: 'json' };
@@ -213,6 +215,9 @@ async function main() {
   }
   if (sub === 'usage') {
     const usage = await freshUsage(det, cfg);
+    const limits = await collectUsage({ cfg, det, refresh: args.refresh });
+    if (args.json) return console.log(JSON.stringify({ limits }, null, 2));
+    print(<LimitsPanel services={limits} detail={rest.includes('details')} />);
     const all = readLedger();
     const now = Date.now();
     print(<AllAiUsagePanel det={det} cfg={cfg} usage={usage} entries={all} />);
